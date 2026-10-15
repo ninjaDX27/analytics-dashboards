@@ -1,0 +1,10 @@
+{
+  "synthetic": true,
+  "seed": 7312026,
+  "start": "2026-04-01",
+  "end": "2026-09-30",
+  "currency": "EUR",
+  "grain": "acquisition date × channel × campaign",
+  "attribution": "resolved synthetic acquisition cohort; no conversion lag",
+  "costScope": "paid media only; excludes payroll, agency, software and organic production costs"
+}

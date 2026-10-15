@@ -1,0 +1,5 @@
+{
+  "name": "analytics-dashboards", "version": "1.0.0", "private": true, "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": { "generate": "node scripts/generate-dataset.mjs", "test": "node --test", "validate": "node scripts/validate-dataset.mjs" }
+}

@@ -1,0 +1,9 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
+import {parseDataset,validateRows,summarize,divide} from '../src/metrics.mjs';import {generateMatrix,encodeCSV} from '../src/simulated.mjs';
+const csv=await readFile(new URL('../datasets/acquisition-funnel-simulated.csv',import.meta.url),'utf8');const rows=parseDataset(csv);
+test('fixture is deterministic and matches the committed generator',()=>assert.equal(csv,encodeCSV(generateMatrix())));
+test('six complete months contain eight unique campaign rows every day',()=>{assert.deepEqual(validateRows(rows),{rows:1464,uniqueDays:183,months:6});const days=new Map();for(const r of rows)days.set(r.Date,(days.get(r.Date)??0)+1);assert.ok([...days.values()].every(n=>n===8));});
+test('invalid funnel, missing amounts and duplicate grain fail',()=>{for(const mutation of [r=>r.Leads=r.Clicks+1,r=>r.Cost_EUR=NaN]){const changed=structuredClone(rows);mutation(changed[0]);assert.throws(()=>validateRows(changed));}assert.throws(()=>validateRows([...rows,rows[0]]));});
+test('ratios use aggregate components, not the mean of per-row ratios',()=>{const fixture=[{Impressions:100,Clicks:10,Cost_EUR:10,Leads:4,Qualified_Leads:2,Conversions:1,Revenue_EUR:100},{Impressions:100,Clicks:20,Cost_EUR:100,Leads:10,Qualified_Leads:8,Conversions:2,Revenue_EUR:200}];const s=summarize(fixture);assert.equal(s.CPQL,11);assert.equal(s.mediaCAC,110/3);assert.equal(s.qualificationRate,10/14);assert.equal(s.blendedROAS,300/110);});
+test('zero denominators stay unavailable',()=>{assert.equal(divide(10,0),null);assert.equal(divide(0,10),0);});
+test('row-level money reconciles exactly in cents',()=>{const totals=summarize(rows);for(const key of ['Cost_EUR','Revenue_EUR'])assert.equal(Math.round(totals[key]*100),rows.reduce((sum,r)=>sum+Math.round(r[key]*100),0));});
