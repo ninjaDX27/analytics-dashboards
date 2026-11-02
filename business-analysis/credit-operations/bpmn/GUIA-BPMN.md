@@ -90,4 +90,4 @@ Ambos estão com `isExecutable="false"`. **Um ficheiro BPMN editável não é um
 Entrega uma tabela `Problema | Evidência necessária | Requisito | Métrica | Critério de aceitação` para as três fricções prioritárias. Faz a ligação às FR-01…FR-07 do [BRD](../docs/03-requisitos.md) e apresenta uma versão de processo revista.
 
 ## Validações
-Verificação inicial de coerência de IDs, referências de flows, lanes e presença de BPMN DI realizada no gerador. **É indispensável abrir ambos os ficheiros num modelador BPMN e validar visualmente layout, fluxo e semântica antes de uma apresentação formal.**
+Verificação inicial de coerência de IDs, referências de flows, lanes e presença de BPMN DI realizada no gerador. Executa também, a partir da pasta do case study, `python tests/test_bpmn.py` para validar XML, referências, gateways, pools e DI. **É indispensável abrir ambos os ficheiros num modelador BPMN e validar visualmente layout, fluxo e semântica antes de uma apresentação formal.**
