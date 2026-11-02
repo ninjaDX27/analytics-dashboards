@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Defs_ASIS" targetNamespace="https://portfolio.example/credit-operations" exporter="Business Analysis Portfolio" exporterVersion="1.0">
+  <bpmn:collaboration id="Collaboration_ASIS" name="Colaboração - AS-IS (hipótese)">
+    <bpmn:participant id="Customer_ASIS" name="Cliente (externo)" />
+    <bpmn:participant id="Pool_ASIS" name="Intermediário de crédito" processRef="Process_ASIS" />
+    <bpmn:participant id="Bank_ASIS" name="Instituição financeira (externa)" />
+    <bpmn:messageFlow id="A_MF_Lead" name="Lead" sourceRef="Customer_ASIS" targetRef="A_Start" />
+    <bpmn:messageFlow id="A_MF_DocsRequest" name="Pedido de documentos" sourceRef="A_RequestDocs" targetRef="Customer_ASIS" />
+    <bpmn:messageFlow id="A_MF_DocsReceipt" name="Documentação" sourceRef="Customer_ASIS" targetRef="A_CheckDocs" />
+    <bpmn:messageFlow id="A_MF_Submission" name="Dossiê" sourceRef="A_Submit" targetRef="Bank_ASIS" />
+    <bpmn:messageFlow id="A_MF_Decision" name="Decisão" sourceRef="Bank_ASIS" targetRef="A_Receive" />
+    <bpmn:messageFlow id="A_MF_Outcome" name="Resultado" sourceRef="A_Notify" targetRef="Customer_ASIS" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_ASIS" name="AS-IS (hipótese): tratamento de leads e documentação" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_ASIS">
+      <bpmn:lane id="Lane_ASIS_Captacao" name="Captação e atendimento">
+        <bpmn:flowNodeRef>A_Start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_Register</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_ASIS_Credito" name="Intermediário de crédito">
+        <bpmn:flowNodeRef>A_Contact</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_ContactGate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_Followup</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_AttemptsGate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_Lost</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_Triage</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_RequestDocs</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_CheckDocs</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_DocsGate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_Validate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_ValidGate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_Notify</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_End</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_ASIS_Operacoes" name="Operações / gestão">
+        <bpmn:flowNodeRef>A_Assign</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_RemindDocs</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_Submit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A_Receive</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="A_Start" name="Pedido recebido">
+      <bpmn:outgoing>Flow_ASIS_01</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="A_Start_MessageDefinition" />
+    </bpmn:startEvent>
+    <bpmn:task id="A_Register" name="Registar lead manualmente">
+      <bpmn:incoming>Flow_ASIS_01</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_02</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:userTask id="A_Assign" name="Distribuir manualmente">
+      <bpmn:incoming>Flow_ASIS_02</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_03</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A_Contact" name="Tentar contactar cliente">
+      <bpmn:incoming>Flow_ASIS_03</bpmn:incoming>
+      <bpmn:incoming>Flow_ASIS_08</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_04</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="A_ContactGate" name="Contactado?" default="Flow_ASIS_05">
+      <bpmn:incoming>Flow_ASIS_04</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_05</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ASIS_09</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="A_Followup" name="Agendar follow-up manual">
+      <bpmn:incoming>Flow_ASIS_05</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_06</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="A_AttemptsGate" name="Encerrar tentativas?" default="Flow_ASIS_08">
+      <bpmn:incoming>Flow_ASIS_06</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_07</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ASIS_08</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="A_Lost" name="Sem contacto">
+      <bpmn:incoming>Flow_ASIS_07</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="A_Triage" name="Realizar triagem">
+      <bpmn:incoming>Flow_ASIS_09</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="A_RequestDocs" name="Pedir documentos">
+      <bpmn:incoming>Flow_ASIS_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_11</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="A_CheckDocs" name="Conferir receção">
+      <bpmn:incoming>Flow_ASIS_11</bpmn:incoming>
+      <bpmn:incoming>Flow_ASIS_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="A_DocsGate" name="Documentos completos?" default="Flow_ASIS_13">
+      <bpmn:incoming>Flow_ASIS_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_13</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ASIS_15</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="A_RemindDocs" name="Repetir pedido manual">
+      <bpmn:incoming>Flow_ASIS_13</bpmn:incoming>
+      <bpmn:incoming>Flow_ASIS_17</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_14</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="A_Validate" name="Validar documentos">
+      <bpmn:incoming>Flow_ASIS_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_16</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="A_ValidGate" name="Documentos válidos?" default="Flow_ASIS_17">
+      <bpmn:incoming>Flow_ASIS_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_17</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ASIS_18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="A_Submit" name="Submeter dossiê ao banco">
+      <bpmn:incoming>Flow_ASIS_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_19</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:receiveTask id="A_Receive" name="Receber decisão externa">
+      <bpmn:incoming>Flow_ASIS_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_20</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:sendTask id="A_Notify" name="Comunicar decisão">
+      <bpmn:incoming>Flow_ASIS_20</bpmn:incoming>
+      <bpmn:outgoing>Flow_ASIS_21</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="A_End" name="Decisão comunicada">
+      <bpmn:incoming>Flow_ASIS_21</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_ASIS_01" sourceRef="A_Start" targetRef="A_Register" />
+    <bpmn:sequenceFlow id="Flow_ASIS_02" sourceRef="A_Register" targetRef="A_Assign" />
+    <bpmn:sequenceFlow id="Flow_ASIS_03" sourceRef="A_Assign" targetRef="A_Contact" />
+    <bpmn:sequenceFlow id="Flow_ASIS_04" sourceRef="A_Contact" targetRef="A_ContactGate" />
+    <bpmn:sequenceFlow id="Flow_ASIS_05" name="Não" sourceRef="A_ContactGate" targetRef="A_Followup" />
+    <bpmn:sequenceFlow id="Flow_ASIS_06" sourceRef="A_Followup" targetRef="A_AttemptsGate" />
+    <bpmn:sequenceFlow id="Flow_ASIS_07" name="Sim" sourceRef="A_AttemptsGate" targetRef="A_Lost" />
+    <bpmn:sequenceFlow id="Flow_ASIS_08" name="Não" sourceRef="A_AttemptsGate" targetRef="A_Contact" />
+    <bpmn:sequenceFlow id="Flow_ASIS_09" name="Sim" sourceRef="A_ContactGate" targetRef="A_Triage" />
+    <bpmn:sequenceFlow id="Flow_ASIS_10" sourceRef="A_Triage" targetRef="A_RequestDocs" />
+    <bpmn:sequenceFlow id="Flow_ASIS_11" sourceRef="A_RequestDocs" targetRef="A_CheckDocs" />
+    <bpmn:sequenceFlow id="Flow_ASIS_12" sourceRef="A_CheckDocs" targetRef="A_DocsGate" />
+    <bpmn:sequenceFlow id="Flow_ASIS_13" name="Não" sourceRef="A_DocsGate" targetRef="A_RemindDocs" />
+    <bpmn:sequenceFlow id="Flow_ASIS_14" name="Novo pedido" sourceRef="A_RemindDocs" targetRef="A_CheckDocs" />
+    <bpmn:sequenceFlow id="Flow_ASIS_15" name="Sim" sourceRef="A_DocsGate" targetRef="A_Validate" />
+    <bpmn:sequenceFlow id="Flow_ASIS_16" sourceRef="A_Validate" targetRef="A_ValidGate" />
+    <bpmn:sequenceFlow id="Flow_ASIS_17" name="Não" sourceRef="A_ValidGate" targetRef="A_RemindDocs" />
+    <bpmn:sequenceFlow id="Flow_ASIS_18" name="Sim" sourceRef="A_ValidGate" targetRef="A_Submit" />
+    <bpmn:sequenceFlow id="Flow_ASIS_19" sourceRef="A_Submit" targetRef="A_Receive" />
+    <bpmn:sequenceFlow id="Flow_ASIS_20" sourceRef="A_Receive" targetRef="A_Notify" />
+    <bpmn:sequenceFlow id="Flow_ASIS_21" sourceRef="A_Notify" targetRef="A_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_ASIS">
+    <bpmndi:BPMNPlane id="Plane_ASIS" bpmnElement="Collaboration_ASIS">
+      <bpmndi:BPMNShape id="Customer_ASIS_di" bpmnElement="Customer_ASIS" isHorizontal="true">
+        <dc:Bounds x="140" y="65" width="2591" height="76" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Pool_ASIS_di" bpmnElement="Pool_ASIS" isHorizontal="true">
+        <dc:Bounds x="140" y="180" width="2591" height="600" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_ASIS_Captacao_di" bpmnElement="Lane_ASIS_Captacao" isHorizontal="true">
+        <dc:Bounds x="140" y="180" width="2591" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_ASIS_Credito_di" bpmnElement="Lane_ASIS_Credito" isHorizontal="true">
+        <dc:Bounds x="140" y="360" width="2591" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_ASIS_Operacoes_di" bpmnElement="Lane_ASIS_Operacoes" isHorizontal="true">
+        <dc:Bounds x="140" y="590" width="2591" height="190" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Bank_ASIS_di" bpmnElement="Bank_ASIS" isHorizontal="true">
+        <dc:Bounds x="140" y="825" width="2591" height="76" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Start_di" bpmnElement="A_Start">
+        <dc:Bounds x="220" y="250" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Register_di" bpmnElement="A_Register">
+        <dc:Bounds x="340" y="230" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Assign_di" bpmnElement="A_Assign">
+        <dc:Bounds x="525" y="645" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Contact_di" bpmnElement="A_Contact">
+        <dc:Bounds x="710" y="427" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_ContactGate_di" bpmnElement="A_ContactGate" isMarkerVisible="true">
+        <dc:Bounds x="885" y="440" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Followup_di" bpmnElement="A_Followup">
+        <dc:Bounds x="1015" y="400" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_AttemptsGate_di" bpmnElement="A_AttemptsGate" isMarkerVisible="true">
+        <dc:Bounds x="1190" y="440" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Lost_di" bpmnElement="A_Lost">
+        <dc:Bounds x="1365" y="448" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Triage_di" bpmnElement="A_Triage">
+        <dc:Bounds x="1020" y="510" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_RequestDocs_di" bpmnElement="A_RequestDocs">
+        <dc:Bounds x="1195" y="510" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_CheckDocs_di" bpmnElement="A_CheckDocs">
+        <dc:Bounds x="1370" y="510" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_DocsGate_di" bpmnElement="A_DocsGate" isMarkerVisible="true">
+        <dc:Bounds x="1540" y="520" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_RemindDocs_di" bpmnElement="A_RemindDocs">
+        <dc:Bounds x="1710" y="640" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Validate_di" bpmnElement="A_Validate">
+        <dc:Bounds x="1710" y="500" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_ValidGate_di" bpmnElement="A_ValidGate" isMarkerVisible="true">
+        <dc:Bounds x="1880" y="520" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Submit_di" bpmnElement="A_Submit">
+        <dc:Bounds x="2050" y="640" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Receive_di" bpmnElement="A_Receive">
+        <dc:Bounds x="2220" y="640" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Notify_di" bpmnElement="A_Notify">
+        <dc:Bounds x="2400" y="510" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_End_di" bpmnElement="A_End">
+        <dc:Bounds x="2595" y="528" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_ASIS_01_di" bpmnElement="Flow_ASIS_01">
+        <di:waypoint x="256" y="268" />
+        <di:waypoint x="298" y="268" />
+        <di:waypoint x="298" y="267" />
+        <di:waypoint x="340" y="267" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_02_di" bpmnElement="Flow_ASIS_02">
+        <di:waypoint x="485" y="267" />
+        <di:waypoint x="505" y="267" />
+        <di:waypoint x="505" y="682" />
+        <di:waypoint x="525" y="682" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_03_di" bpmnElement="Flow_ASIS_03">
+        <di:waypoint x="670" y="682" />
+        <di:waypoint x="690" y="682" />
+        <di:waypoint x="690" y="464" />
+        <di:waypoint x="710" y="464" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_04_di" bpmnElement="Flow_ASIS_04">
+        <di:waypoint x="855" y="464" />
+        <di:waypoint x="870" y="464" />
+        <di:waypoint x="870" y="466" />
+        <di:waypoint x="885" y="466" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_05_di" bpmnElement="Flow_ASIS_05">
+        <di:waypoint x="937" y="466" />
+        <di:waypoint x="976" y="466" />
+        <di:waypoint x="976" y="437" />
+        <di:waypoint x="1015" y="437" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_06_di" bpmnElement="Flow_ASIS_06">
+        <di:waypoint x="1160" y="437" />
+        <di:waypoint x="1175" y="437" />
+        <di:waypoint x="1175" y="466" />
+        <di:waypoint x="1190" y="466" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_07_di" bpmnElement="Flow_ASIS_07">
+        <di:waypoint x="1242" y="466" />
+        <di:waypoint x="1304" y="466" />
+        <di:waypoint x="1304" y="466" />
+        <di:waypoint x="1365" y="466" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_08_di" bpmnElement="Flow_ASIS_08">
+        <di:waypoint x="1242" y="466" />
+        <di:waypoint x="1282" y="466" />
+        <di:waypoint x="1282" y="375" />
+        <di:waypoint x="670" y="375" />
+        <di:waypoint x="670" y="464" />
+        <di:waypoint x="710" y="464" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_09_di" bpmnElement="Flow_ASIS_09">
+        <di:waypoint x="937" y="466" />
+        <di:waypoint x="979" y="466" />
+        <di:waypoint x="979" y="547" />
+        <di:waypoint x="1020" y="547" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_10_di" bpmnElement="Flow_ASIS_10">
+        <di:waypoint x="1165" y="547" />
+        <di:waypoint x="1180" y="547" />
+        <di:waypoint x="1180" y="547" />
+        <di:waypoint x="1195" y="547" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_11_di" bpmnElement="Flow_ASIS_11">
+        <di:waypoint x="1340" y="547" />
+        <di:waypoint x="1355" y="547" />
+        <di:waypoint x="1355" y="547" />
+        <di:waypoint x="1370" y="547" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_12_di" bpmnElement="Flow_ASIS_12">
+        <di:waypoint x="1515" y="547" />
+        <di:waypoint x="1528" y="547" />
+        <di:waypoint x="1528" y="546" />
+        <di:waypoint x="1540" y="546" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_13_di" bpmnElement="Flow_ASIS_13">
+        <di:waypoint x="1592" y="546" />
+        <di:waypoint x="1651" y="546" />
+        <di:waypoint x="1651" y="677" />
+        <di:waypoint x="1710" y="677" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_14_di" bpmnElement="Flow_ASIS_14">
+        <di:waypoint x="1855" y="677" />
+        <di:waypoint x="1895" y="677" />
+        <di:waypoint x="1895" y="770" />
+        <di:waypoint x="1330" y="770" />
+        <di:waypoint x="1330" y="547" />
+        <di:waypoint x="1370" y="547" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_15_di" bpmnElement="Flow_ASIS_15">
+        <di:waypoint x="1592" y="546" />
+        <di:waypoint x="1651" y="546" />
+        <di:waypoint x="1651" y="537" />
+        <di:waypoint x="1710" y="537" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_16_di" bpmnElement="Flow_ASIS_16">
+        <di:waypoint x="1855" y="537" />
+        <di:waypoint x="1868" y="537" />
+        <di:waypoint x="1868" y="546" />
+        <di:waypoint x="1880" y="546" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_17_di" bpmnElement="Flow_ASIS_17">
+        <di:waypoint x="1932" y="546" />
+        <di:waypoint x="1962" y="546" />
+        <di:waypoint x="1962" y="462" />
+        <di:waypoint x="1685" y="462" />
+        <di:waypoint x="1685" y="677" />
+        <di:waypoint x="1710" y="677" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_18_di" bpmnElement="Flow_ASIS_18">
+        <di:waypoint x="1932" y="546" />
+        <di:waypoint x="1991" y="546" />
+        <di:waypoint x="1991" y="677" />
+        <di:waypoint x="2050" y="677" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_19_di" bpmnElement="Flow_ASIS_19">
+        <di:waypoint x="2195" y="677" />
+        <di:waypoint x="2208" y="677" />
+        <di:waypoint x="2208" y="677" />
+        <di:waypoint x="2220" y="677" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_20_di" bpmnElement="Flow_ASIS_20">
+        <di:waypoint x="2365" y="677" />
+        <di:waypoint x="2383" y="677" />
+        <di:waypoint x="2383" y="547" />
+        <di:waypoint x="2400" y="547" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ASIS_21_di" bpmnElement="Flow_ASIS_21">
+        <di:waypoint x="2545" y="547" />
+        <di:waypoint x="2570" y="547" />
+        <di:waypoint x="2570" y="546" />
+        <di:waypoint x="2595" y="546" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_MF_Lead_di" bpmnElement="A_MF_Lead">
+        <di:waypoint x="238" y="141" />
+        <di:waypoint x="238" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_MF_DocsRequest_di" bpmnElement="A_MF_DocsRequest">
+        <di:waypoint x="1268" y="510" />
+        <di:waypoint x="1268" y="141" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_MF_DocsReceipt_di" bpmnElement="A_MF_DocsReceipt">
+        <di:waypoint x="1443" y="141" />
+        <di:waypoint x="1443" y="510" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_MF_Submission_di" bpmnElement="A_MF_Submission">
+        <di:waypoint x="2123" y="714" />
+        <di:waypoint x="2123" y="825" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_MF_Decision_di" bpmnElement="A_MF_Decision">
+        <di:waypoint x="2293" y="825" />
+        <di:waypoint x="2293" y="714" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_MF_Outcome_di" bpmnElement="A_MF_Outcome">
+        <di:waypoint x="2473" y="510" />
+        <di:waypoint x="2473" y="141" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
