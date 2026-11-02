@@ -1,6 +1,6 @@
 # 02 — Process analysis: AS-IS and TO-BE
 
-Os diagramas são modelos **conceptuais** (Mermaid), não diagramas BPMN 2.0 certificados. Um BA deve convertê-los depois em BPMN com swimlanes, eventos, gateways, SLAs e tratamento de exceções.
+Os diagramas Mermaid abaixo são esquemas conceptuais de síntese, não BPMN. A modelação formal inicial está nos ficheiros BPMN 2.0 XML com BPMN DI: **[AS-IS](../bpmn/AS-IS.bpmn)** e **[TO-BE](../bpmn/TO-BE.bpmn)**. Consulta o **[guia BPMN](../bpmn/GUIA-BPMN.md)** para compreender pools, lanes, eventos, gateways, message flows, pressupostos e limitações. Ambos são modelos analíticos não executáveis, ainda sujeitos a validação com stakeholders.
 
 ## AS-IS hipotético
 
