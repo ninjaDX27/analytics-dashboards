@@ -14,6 +14,9 @@ O entregável demonstra a passagem de problema → evidência → processos → 
 | --- | --- |
 | [01 - Enquadramento](docs/01-problema-e-metricas.md) | Problema, hipóteses, stakeholders e KPI dictionary |
 | [02 - AS-IS / TO-BE](docs/02-processos.md) | Modelos de processos, pontos de fricção e controlos |
+| [BPMN 2.0 — AS-IS](bpmn/AS-IS.bpmn) | BPMN XML editável, pools/lane, gateways e message flows |
+| [BPMN 2.0 — TO-BE](bpmn/TO-BE.bpmn) | BPMN XML editável com CRM, checklist, revisão humana e alerta SLA |
+| [Guia BPMN 2.0](bpmn/GUIA-BPMN.md) | Tutorial, comparação e validação antes de produção |
 | [03 - Requisitos](docs/03-requisitos.md) | Business requirements, requisitos funcionais e não funcionais |
 | [04 - User stories e UAT](docs/04-backlog-e-uat.md) | Priorização MoSCoW e casos de teste |
 | [05 - Business case](docs/05-business-case.md) | Modelo de impacto, custos, riscos e regras de decisão |
@@ -49,6 +52,6 @@ A recomendação provisória é testar um fluxo único de triagem + checklist do
 1. Corre o teste de dados e as queries.
 2. Explica por que um CPL mais baixo não significa necessariamente melhor economia de aquisição.
 3. Conduz uma entrevista simulada com um intermediário de crédito e revê os requisitos.
-4. Acrescenta uma matriz RACI, mapeamento BPMN 2.0 formal numa ferramenta e uma estimativa de ROI com custos validados.
+4. Abre, revê e valida [os modelos BPMN 2.0](bpmn/GUIA-BPMN.md) num modelador; acrescenta matriz RACI e uma estimativa de ROI com custos validados.
 
 **Foco de carreira:** Junior Business Analyst · Business Process Analyst · Digital Transformation Analyst.
