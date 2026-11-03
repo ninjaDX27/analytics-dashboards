@@ -17,6 +17,7 @@ O entregável demonstra a passagem de problema → evidência → processos → 
 | [BPMN 2.0 — AS-IS](bpmn/AS-IS.bpmn) | BPMN XML editável, pools/lane, gateways e message flows |
 | [BPMN 2.0 — TO-BE](bpmn/TO-BE.bpmn) | BPMN XML editável com CRM, checklist, revisão humana e alerta SLA |
 | [Guia BPMN 2.0](bpmn/GUIA-BPMN.md) | Tutorial, comparação e validação antes de produção |
+| [Exercício 5 — AND/XOR e IRS condicional](bpmn/EXERCICIO-05-VERIFICACOES.bpmn) | Modelo de treino com validações paralelas, IRS opcional e correção controlada |
 | [03 - Requisitos](docs/03-requisitos.md) | Business requirements, requisitos funcionais e não funcionais |
 | [04 - User stories e UAT](docs/04-backlog-e-uat.md) | Priorização MoSCoW e casos de teste |
 | [05 - Business case](docs/05-business-case.md) | Modelo de impacto, custos, riscos e regras de decisão |
