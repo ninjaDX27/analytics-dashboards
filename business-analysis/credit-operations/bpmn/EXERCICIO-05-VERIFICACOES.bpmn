@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_Exercise05" targetNamespace="https://portfolio.example/business-analysis/credit-operations" exporter="Business Analysis Training">
+<bpmn:collaboration id="Collaboration_Exercise05"><bpmn:participant id="Participant_Intermediario" name="Intermediário de Crédito" processRef="Process_Exercise05"/><bpmn:participant id="Participant_Banco" name="Banco (black-box)"/><bpmn:messageFlow id="MessageFlow_Submissao" name="Dossiê submetido" sourceRef="Task_Submit" targetRef="Participant_Banco"/></bpmn:collaboration>
+<bpmn:process id="Process_Exercise05" name="Verificação de identidade, rendimentos e IRS condicional" isExecutable="false"><bpmn:laneSet id="LaneSet_Exercise05">
+<bpmn:lane id="Lane_Gestao" name="Gestão do processo"><bpmn:flowNodeRef>Start_Received</bpmn:flowNodeRef><bpmn:flowNodeRef>Gateway_RetryJoin</bpmn:flowNodeRef><bpmn:flowNodeRef>Gateway_AndSplit</bpmn:flowNodeRef><bpmn:flowNodeRef>Gateway_AndJoin</bpmn:flowNodeRef><bpmn:flowNodeRef>Gateway_AllValid</bpmn:flowNodeRef><bpmn:flowNodeRef>Task_Submit</bpmn:flowNodeRef><bpmn:flowNodeRef>End_Submitted</bpmn:flowNodeRef><bpmn:flowNodeRef>Task_Correction</bpmn:flowNodeRef><bpmn:flowNodeRef>Gateway_Correctable</bpmn:flowNodeRef><bpmn:flowNodeRef>End_Closed</bpmn:flowNodeRef></bpmn:lane>
+<bpmn:lane id="Lane_Identidade" name="Validação de identidade"><bpmn:flowNodeRef>Task_ID</bpmn:flowNodeRef></bpmn:lane>
+<bpmn:lane id="Lane_Rendimentos" name="Validação financeira"><bpmn:flowNodeRef>Task_Income</bpmn:flowNodeRef><bpmn:flowNodeRef>Gateway_SelfEmployed</bpmn:flowNodeRef><bpmn:flowNodeRef>Task_IRS</bpmn:flowNodeRef><bpmn:flowNodeRef>Gateway_IrsMerge</bpmn:flowNodeRef></bpmn:lane>
+</bpmn:laneSet>
+<bpmn:startEvent id="Start_Received" name="Dossiê recebido"><bpmn:outgoing>F01</bpmn:outgoing></bpmn:startEvent>
+<bpmn:exclusiveGateway id="Gateway_RetryJoin" name="Início / nova tentativa"><bpmn:incoming>F01</bpmn:incoming><bpmn:incoming>F15</bpmn:incoming><bpmn:outgoing>F02</bpmn:outgoing></bpmn:exclusiveGateway>
+<bpmn:parallelGateway id="Gateway_AndSplit" name="Iniciar verificações"><bpmn:incoming>F02</bpmn:incoming><bpmn:outgoing>F03</bpmn:outgoing><bpmn:outgoing>F04</bpmn:outgoing></bpmn:parallelGateway>
+<bpmn:userTask id="Task_ID" name="Verificar identidade e registar resultado"><bpmn:incoming>F03</bpmn:incoming><bpmn:outgoing>F05</bpmn:outgoing></bpmn:userTask>
+<bpmn:userTask id="Task_Income" name="Verificar rendimentos e registar resultado"><bpmn:incoming>F04</bpmn:incoming><bpmn:outgoing>F06</bpmn:outgoing></bpmn:userTask>
+<bpmn:exclusiveGateway id="Gateway_SelfEmployed" name="Trabalhador independente?" default="F08"><bpmn:incoming>F06</bpmn:incoming><bpmn:outgoing>F07</bpmn:outgoing><bpmn:outgoing>F08</bpmn:outgoing></bpmn:exclusiveGateway>
+<bpmn:userTask id="Task_IRS" name="Verificar IRS e registar resultado"><bpmn:incoming>F07</bpmn:incoming><bpmn:outgoing>F09</bpmn:outgoing></bpmn:userTask>
+<bpmn:exclusiveGateway id="Gateway_IrsMerge" name="Unir alternativas IRS"><bpmn:incoming>F08</bpmn:incoming><bpmn:incoming>F09</bpmn:incoming><bpmn:outgoing>F10</bpmn:outgoing></bpmn:exclusiveGateway>
+<bpmn:parallelGateway id="Gateway_AndJoin" name="Sincronizar verificações"><bpmn:incoming>F05</bpmn:incoming><bpmn:incoming>F10</bpmn:incoming><bpmn:outgoing>F11</bpmn:outgoing></bpmn:parallelGateway>
+<bpmn:exclusiveGateway id="Gateway_AllValid" name="Tudo válido?" default="F13"><bpmn:incoming>F11</bpmn:incoming><bpmn:outgoing>F12</bpmn:outgoing><bpmn:outgoing>F13</bpmn:outgoing></bpmn:exclusiveGateway>
+<bpmn:sendTask id="Task_Submit" name="Submeter dossiê ao banco"><bpmn:incoming>F12</bpmn:incoming><bpmn:outgoing>F17</bpmn:outgoing></bpmn:sendTask>
+<bpmn:endEvent id="End_Submitted" name="Submissão efetuada"><bpmn:incoming>F17</bpmn:incoming></bpmn:endEvent>
+<bpmn:userTask id="Task_Correction" name="Solicitar correções documentais"><bpmn:incoming>F13</bpmn:incoming><bpmn:outgoing>F14</bpmn:outgoing></bpmn:userTask>
+<bpmn:exclusiveGateway id="Gateway_Correctable" name="Correção possível?" default="F16"><bpmn:incoming>F14</bpmn:incoming><bpmn:outgoing>F15</bpmn:outgoing><bpmn:outgoing>F16</bpmn:outgoing></bpmn:exclusiveGateway>
+<bpmn:endEvent id="End_Closed" name="Encerrado sem submissão"><bpmn:incoming>F16</bpmn:incoming></bpmn:endEvent>
+<bpmn:sequenceFlow id="F01" sourceRef="Start_Received" targetRef="Gateway_RetryJoin"/>
+<bpmn:sequenceFlow id="F02" sourceRef="Gateway_RetryJoin" targetRef="Gateway_AndSplit"/>
+<bpmn:sequenceFlow id="F03" sourceRef="Gateway_AndSplit" targetRef="Task_ID" name="Identidade"/>
+<bpmn:sequenceFlow id="F04" sourceRef="Gateway_AndSplit" targetRef="Task_Income" name="Rendimentos"/>
+<bpmn:sequenceFlow id="F05" sourceRef="Task_ID" targetRef="Gateway_AndJoin"/>
+<bpmn:sequenceFlow id="F06" sourceRef="Task_Income" targetRef="Gateway_SelfEmployed"/>
+<bpmn:sequenceFlow id="F07" sourceRef="Gateway_SelfEmployed" targetRef="Task_IRS" name="Sim"/>
+<bpmn:sequenceFlow id="F08" sourceRef="Gateway_SelfEmployed" targetRef="Gateway_IrsMerge" name="Não"/>
+<bpmn:sequenceFlow id="F09" sourceRef="Task_IRS" targetRef="Gateway_IrsMerge"/>
+<bpmn:sequenceFlow id="F10" sourceRef="Gateway_IrsMerge" targetRef="Gateway_AndJoin"/>
+<bpmn:sequenceFlow id="F11" sourceRef="Gateway_AndJoin" targetRef="Gateway_AllValid"/>
+<bpmn:sequenceFlow id="F12" sourceRef="Gateway_AllValid" targetRef="Task_Submit" name="Sim"/>
+<bpmn:sequenceFlow id="F13" sourceRef="Gateway_AllValid" targetRef="Task_Correction" name="Não"/>
+<bpmn:sequenceFlow id="F14" sourceRef="Task_Correction" targetRef="Gateway_Correctable"/>
+<bpmn:sequenceFlow id="F15" sourceRef="Gateway_Correctable" targetRef="Gateway_RetryJoin" name="Sim"/>
+<bpmn:sequenceFlow id="F16" sourceRef="Gateway_Correctable" targetRef="End_Closed" name="Não"/>
+<bpmn:sequenceFlow id="F17" sourceRef="Task_Submit" targetRef="End_Submitted"/>
+</bpmn:process>
+<bpmndi:BPMNDiagram id="Diagram_Exercise05"><bpmndi:BPMNPlane id="Plane_Exercise05" bpmnElement="Collaboration_Exercise05">
+<bpmndi:BPMNShape id="Participant_Intermediario_di" bpmnElement="Participant_Intermediario" isHorizontal="true"><dc:Bounds x="90" y="160" width="2000" height="575"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Lane_Gestao_di" bpmnElement="Lane_Gestao" isHorizontal="true"><dc:Bounds x="90" y="160" width="2000" height="240"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Lane_Identidade_di" bpmnElement="Lane_Identidade" isHorizontal="true"><dc:Bounds x="90" y="400" width="2000" height="160"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Lane_Rendimentos_di" bpmnElement="Lane_Rendimentos" isHorizontal="true"><dc:Bounds x="90" y="560" width="2000" height="175"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Participant_Banco_di" bpmnElement="Participant_Banco" isHorizontal="true"><dc:Bounds x="90" y="785" width="2000" height="85"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Start_Received_di" bpmnElement="Start_Received"><dc:Bounds x="130" y="232" width="36" height="36"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Gateway_RetryJoin_di" bpmnElement="Gateway_RetryJoin"><dc:Bounds x="240" y="224" width="52" height="52"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Gateway_AndSplit_di" bpmnElement="Gateway_AndSplit"><dc:Bounds x="355" y="224" width="52" height="52"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Task_ID_di" bpmnElement="Task_ID"><dc:Bounds x="510" y="437" width="170" height="74"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Task_Income_di" bpmnElement="Task_Income"><dc:Bounds x="510" y="600" width="170" height="74"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Gateway_SelfEmployed_di" bpmnElement="Gateway_SelfEmployed"><dc:Bounds x="729" y="611" width="52" height="52"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Task_IRS_di" bpmnElement="Task_IRS"><dc:Bounds x="865" y="600" width="170" height="74"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Gateway_IrsMerge_di" bpmnElement="Gateway_IrsMerge"><dc:Bounds x="1080" y="611" width="52" height="52"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Gateway_AndJoin_di" bpmnElement="Gateway_AndJoin"><dc:Bounds x="1235" y="224" width="52" height="52"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Gateway_AllValid_di" bpmnElement="Gateway_AllValid"><dc:Bounds x="1370" y="224" width="52" height="52"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Task_Submit_di" bpmnElement="Task_Submit"><dc:Bounds x="1505" y="196" width="174" height="74"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="End_Submitted_di" bpmnElement="End_Submitted"><dc:Bounds x="1732" y="215" width="36" height="36"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Task_Correction_di" bpmnElement="Task_Correction"><dc:Bounds x="1505" y="300" width="174" height="74"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="Gateway_Correctable_di" bpmnElement="Gateway_Correctable"><dc:Bounds x="1735" y="311" width="52" height="52"/></bpmndi:BPMNShape>
+<bpmndi:BPMNShape id="End_Closed_di" bpmnElement="End_Closed"><dc:Bounds x="1925" y="320" width="36" height="36"/></bpmndi:BPMNShape>
+<bpmndi:BPMNEdge id="F01_di" bpmnElement="F01"><di:waypoint x="166" y="250"/><di:waypoint x="240" y="250"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F02_di" bpmnElement="F02"><di:waypoint x="292" y="250"/><di:waypoint x="355" y="250"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F03_di" bpmnElement="F03"><di:waypoint x="381" y="276"/><di:waypoint x="381" y="405"/><di:waypoint x="480" y="405"/><di:waypoint x="480" y="474"/><di:waypoint x="510" y="474"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F04_di" bpmnElement="F04"><di:waypoint x="381" y="276"/><di:waypoint x="381" y="562"/><di:waypoint x="450" y="562"/><di:waypoint x="450" y="637"/><di:waypoint x="510" y="637"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F05_di" bpmnElement="F05"><di:waypoint x="680" y="474"/><di:waypoint x="1160" y="474"/><di:waypoint x="1160" y="250"/><di:waypoint x="1235" y="250"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F06_di" bpmnElement="F06"><di:waypoint x="680" y="637"/><di:waypoint x="729" y="637"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F07_di" bpmnElement="F07"><di:waypoint x="781" y="637"/><di:waypoint x="865" y="637"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F08_di" bpmnElement="F08"><di:waypoint x="755" y="611"/><di:waypoint x="755" y="580"/><di:waypoint x="1055" y="580"/><di:waypoint x="1055" y="637"/><di:waypoint x="1080" y="637"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F09_di" bpmnElement="F09"><di:waypoint x="1035" y="637"/><di:waypoint x="1080" y="637"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F10_di" bpmnElement="F10"><di:waypoint x="1132" y="637"/><di:waypoint x="1192" y="637"/><di:waypoint x="1192" y="250"/><di:waypoint x="1235" y="250"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F11_di" bpmnElement="F11"><di:waypoint x="1287" y="250"/><di:waypoint x="1370" y="250"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F12_di" bpmnElement="F12"><di:waypoint x="1422" y="250"/><di:waypoint x="1505" y="233"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F13_di" bpmnElement="F13"><di:waypoint x="1396" y="276"/><di:waypoint x="1396" y="337"/><di:waypoint x="1505" y="337"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F14_di" bpmnElement="F14"><di:waypoint x="1679" y="337"/><di:waypoint x="1735" y="337"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F15_di" bpmnElement="F15"><di:waypoint x="1761" y="363"/><di:waypoint x="1761" y="390"/><di:waypoint x="266" y="390"/><di:waypoint x="266" y="276"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F16_di" bpmnElement="F16"><di:waypoint x="1787" y="337"/><di:waypoint x="1925" y="338"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="F17_di" bpmnElement="F17"><di:waypoint x="1679" y="233"/><di:waypoint x="1732" y="233"/></bpmndi:BPMNEdge>
+<bpmndi:BPMNEdge id="MessageFlow_Submissao_di" bpmnElement="MessageFlow_Submissao"><di:waypoint x="1592" y="270"/><di:waypoint x="1592" y="785"/></bpmndi:BPMNEdge>
+</bpmndi:BPMNPlane></bpmndi:BPMNDiagram></bpmn:definitions>
