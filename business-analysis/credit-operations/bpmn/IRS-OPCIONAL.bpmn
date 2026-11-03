@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_IRS_Optional" targetNamespace="https://ninjaDX27.github.io/business-analysis/credit-operations" exporter="Business Analysis Training" exporterVersion="1.0">
+  <bpmn:collaboration id="Collaboration_IRS_Optional" name="Exercício final: validação documental com IRS opcional">
+    <bpmn:participant id="Participant_Client" name="Cliente (black box)" />
+    <bpmn:participant id="Participant_Internal" name="Intermediário de crédito" processRef="Process_IRS_Optional" />
+    <bpmn:participant id="Participant_Bank" name="Instituição financeira (black box)" />
+    <bpmn:messageFlow id="Message_Bank_Submission" name="Dossiê" sourceRef="Task_Submit" targetRef="Participant_Bank" />
+    <bpmn:messageFlow id="Message_Correction_Request" name="Pedido de correções" sourceRef="Task_Request" targetRef="Participant_Client" />
+    <bpmn:messageFlow id="Message_Correction_Response" name="Documentos corrigidos" sourceRef="Participant_Client" targetRef="Task_Await" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_IRS_Optional" name="Verificações paralelas e IRS condicional" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_IRS">
+      <bpmn:lane id="Lane_Coordenacao" name="Coordenação do dossiê">
+        <bpmn:flowNodeRef>Start_Case</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AND_Split</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AND_Join</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Consolidate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Passed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Submit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Submitted</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Identidade" name="Verificação de identidade">
+        <bpmn:flowNodeRef>Task_Identity</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Correctable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Rejected</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Rendimentos" name="Verificação de rendimentos e IRS">
+        <bpmn:flowNodeRef>Task_Income</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Profile</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IRS</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_XOR_Merge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Request</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Await</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_Timeout</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Timeout</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Case" name="Dossiê recebido">
+      <bpmn:outgoing>Seq_IRS_01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:parallelGateway id="Gateway_AND_Split" name="Iniciar verificações">
+      <bpmn:incoming>Seq_IRS_01</bpmn:incoming>
+      <bpmn:incoming>Seq_IRS_19</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_02</bpmn:outgoing>
+      <bpmn:outgoing>Seq_IRS_03</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="Task_Identity" name="Verificar identidade e registar resultado">
+      <bpmn:incoming>Seq_IRS_02</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_04</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Income" name="Verificar rendimentos e registar resultado">
+      <bpmn:incoming>Seq_IRS_03</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_05</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Profile" name="Trabalhador independente?" default="Seq_IRS_07">
+      <bpmn:incoming>Seq_IRS_05</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_06</bpmn:outgoing>
+      <bpmn:outgoing>Seq_IRS_07</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_IRS" name="Verificar IRS adicional e registar resultado">
+      <bpmn:incoming>Seq_IRS_06</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_08</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_XOR_Merge" name="Reunir perfil">
+      <bpmn:incoming>Seq_IRS_07</bpmn:incoming>
+      <bpmn:incoming>Seq_IRS_08</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_09</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:parallelGateway id="Gateway_AND_Join" name="Aguardar as duas verificações">
+      <bpmn:incoming>Seq_IRS_04</bpmn:incoming>
+      <bpmn:incoming>Seq_IRS_09</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_10</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="Task_Consolidate" name="Consolidar verificações">
+      <bpmn:incoming>Seq_IRS_10</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Passed" name="Todas satisfatórias?" default="Seq_IRS_13">
+      <bpmn:incoming>Seq_IRS_11</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_12</bpmn:outgoing>
+      <bpmn:outgoing>Seq_IRS_13</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="Task_Submit" name="Submeter dossiê ao banco">
+      <bpmn:incoming>Seq_IRS_12</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_14</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="End_Submitted" name="Dossiê submetido">
+      <bpmn:incoming>Seq_IRS_14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_Review" name="Rever falhas documentais">
+      <bpmn:incoming>Seq_IRS_13</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_15</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Correctable" name="Falhas corrigíveis?" default="Seq_IRS_16">
+      <bpmn:incoming>Seq_IRS_15</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_16</bpmn:outgoing>
+      <bpmn:outgoing>Seq_IRS_17</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_Rejected" name="Encerrar sem submissão">
+      <bpmn:incoming>Seq_IRS_16</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sendTask id="Task_Request" name="Solicitar correções ao cliente">
+      <bpmn:incoming>Seq_IRS_17</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_18</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:receiveTask id="Task_Await" name="Aguardar documentos corrigidos">
+      <bpmn:incoming>Seq_IRS_18</bpmn:incoming>
+      <bpmn:outgoing>Seq_IRS_19</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:boundaryEvent id="Timer_Timeout" name="Prazo de resposta expirou" attachedToRef="Task_Await" cancelActivity="true">
+      <bpmn:outgoing>Seq_IRS_20</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDefinition_IRS_Timeout"><bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P5D</bpmn:timeDuration></bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="End_Timeout" name="Encerrar sem resposta">
+      <bpmn:incoming>Seq_IRS_20</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Seq_IRS_01" name="" sourceRef="Start_Case" targetRef="Gateway_AND_Split" />
+    <bpmn:sequenceFlow id="Seq_IRS_02" name="" sourceRef="Gateway_AND_Split" targetRef="Task_Identity" />
+    <bpmn:sequenceFlow id="Seq_IRS_03" name="" sourceRef="Gateway_AND_Split" targetRef="Task_Income" />
+    <bpmn:sequenceFlow id="Seq_IRS_04" name="" sourceRef="Task_Identity" targetRef="Gateway_AND_Join" />
+    <bpmn:sequenceFlow id="Seq_IRS_05" name="" sourceRef="Task_Income" targetRef="Gateway_Profile" />
+    <bpmn:sequenceFlow id="Seq_IRS_06" name="Independente" sourceRef="Gateway_Profile" targetRef="Task_IRS" />
+    <bpmn:sequenceFlow id="Seq_IRS_07" name="Por conta de outrem" sourceRef="Gateway_Profile" targetRef="Gateway_XOR_Merge" />
+    <bpmn:sequenceFlow id="Seq_IRS_08" name="" sourceRef="Task_IRS" targetRef="Gateway_XOR_Merge" />
+    <bpmn:sequenceFlow id="Seq_IRS_09" name="" sourceRef="Gateway_XOR_Merge" targetRef="Gateway_AND_Join" />
+    <bpmn:sequenceFlow id="Seq_IRS_10" name="" sourceRef="Gateway_AND_Join" targetRef="Task_Consolidate" />
+    <bpmn:sequenceFlow id="Seq_IRS_11" name="" sourceRef="Task_Consolidate" targetRef="Gateway_Passed" />
+    <bpmn:sequenceFlow id="Seq_IRS_12" name="Sim" sourceRef="Gateway_Passed" targetRef="Task_Submit" />
+    <bpmn:sequenceFlow id="Seq_IRS_13" name="Não" sourceRef="Gateway_Passed" targetRef="Task_Review" />
+    <bpmn:sequenceFlow id="Seq_IRS_14" name="" sourceRef="Task_Submit" targetRef="End_Submitted" />
+    <bpmn:sequenceFlow id="Seq_IRS_15" name="" sourceRef="Task_Review" targetRef="Gateway_Correctable" />
+    <bpmn:sequenceFlow id="Seq_IRS_16" name="Não" sourceRef="Gateway_Correctable" targetRef="End_Rejected" />
+    <bpmn:sequenceFlow id="Seq_IRS_17" name="Sim" sourceRef="Gateway_Correctable" targetRef="Task_Request" />
+    <bpmn:sequenceFlow id="Seq_IRS_18" name="" sourceRef="Task_Request" targetRef="Task_Await" />
+    <bpmn:sequenceFlow id="Seq_IRS_19" name="Documentos recebidos" sourceRef="Task_Await" targetRef="Gateway_AND_Split" />
+    <bpmn:sequenceFlow id="Seq_IRS_20" name="" sourceRef="Timer_Timeout" targetRef="End_Timeout" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_IRS_Optional">
+    <bpmndi:BPMNPlane id="Plane_IRS_Optional" bpmnElement="Collaboration_IRS_Optional">
+      <bpmndi:BPMNShape id="Participant_Client_di" bpmnElement="Participant_Client" isHorizontal="true">
+        <dc:Bounds x="135" y="80" width="2620" height="75" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Internal_di" bpmnElement="Participant_Internal" isHorizontal="true">
+        <dc:Bounds x="135" y="180" width="2620" height="530" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Coordenacao_di" bpmnElement="Lane_Coordenacao" isHorizontal="true">
+        <dc:Bounds x="135" y="180" width="2620" height="165" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Identidade_di" bpmnElement="Lane_Identidade" isHorizontal="true">
+        <dc:Bounds x="135" y="345" width="2620" height="175" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Rendimentos_di" bpmnElement="Lane_Rendimentos" isHorizontal="true">
+        <dc:Bounds x="135" y="520" width="2620" height="190" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Bank_di" bpmnElement="Participant_Bank" isHorizontal="true">
+        <dc:Bounds x="135" y="815" width="2620" height="75" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Case_di" bpmnElement="Start_Case">
+        <dc:Bounds x="210" y="238" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AND_Split_di" bpmnElement="Gateway_AND_Split" isMarkerVisible="true">
+        <dc:Bounds x="340" y="230" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Identity_di" bpmnElement="Task_Identity">
+        <dc:Bounds x="500" y="383" width="152" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Income_di" bpmnElement="Task_Income">
+        <dc:Bounds x="500" y="569" width="152" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Profile_di" bpmnElement="Gateway_Profile" isMarkerVisible="true">
+        <dc:Bounds x="705" y="578" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_IRS_di" bpmnElement="Task_IRS">
+        <dc:Bounds x="825" y="569" width="152" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_XOR_Merge_di" bpmnElement="Gateway_XOR_Merge" isMarkerVisible="true">
+        <dc:Bounds x="1052" y="578" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AND_Join_di" bpmnElement="Gateway_AND_Join" isMarkerVisible="true">
+        <dc:Bounds x="1190" y="230" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Consolidate_di" bpmnElement="Task_Consolidate">
+        <dc:Bounds x="1320" y="215" width="152" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Passed_di" bpmnElement="Gateway_Passed" isMarkerVisible="true">
+        <dc:Bounds x="1520" y="230" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Submit_di" bpmnElement="Task_Submit">
+        <dc:Bounds x="1690" y="215" width="152" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Submitted_di" bpmnElement="End_Submitted">
+        <dc:Bounds x="1920" y="232" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Review_di" bpmnElement="Task_Review">
+        <dc:Bounds x="1690" y="394" width="152" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Correctable_di" bpmnElement="Gateway_Correctable" isMarkerVisible="true">
+        <dc:Bounds x="1910" y="402" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Rejected_di" bpmnElement="End_Rejected">
+        <dc:Bounds x="2135" y="409" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Request_di" bpmnElement="Task_Request">
+        <dc:Bounds x="2100" y="565" width="152" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Await_di" bpmnElement="Task_Await">
+        <dc:Bounds x="2320" y="565" width="152" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Timer_Timeout_di" bpmnElement="Timer_Timeout">
+        <dc:Bounds x="2390" y="617" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Timeout_di" bpmnElement="End_Timeout">
+        <dc:Bounds x="2575" y="620" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Seq_IRS_01_di" bpmnElement="Seq_IRS_01">
+        <di:waypoint x="246" y="256" />
+        <di:waypoint x="293" y="256" />
+        <di:waypoint x="293" y="256" />
+        <di:waypoint x="340" y="256" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_02_di" bpmnElement="Seq_IRS_02">
+        <di:waypoint x="392" y="256" />
+        <di:waypoint x="446" y="256" />
+        <di:waypoint x="446" y="418" />
+        <di:waypoint x="500" y="418" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_03_di" bpmnElement="Seq_IRS_03">
+        <di:waypoint x="392" y="256" />
+        <di:waypoint x="446" y="256" />
+        <di:waypoint x="446" y="604" />
+        <di:waypoint x="500" y="604" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_04_di" bpmnElement="Seq_IRS_04">
+        <di:waypoint x="652" y="418" />
+        <di:waypoint x="921" y="418" />
+        <di:waypoint x="921" y="256" />
+        <di:waypoint x="1190" y="256" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_05_di" bpmnElement="Seq_IRS_05">
+        <di:waypoint x="652" y="604" />
+        <di:waypoint x="679" y="604" />
+        <di:waypoint x="679" y="604" />
+        <di:waypoint x="705" y="604" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_06_di" bpmnElement="Seq_IRS_06">
+        <di:waypoint x="757" y="604" />
+        <di:waypoint x="791" y="604" />
+        <di:waypoint x="791" y="604" />
+        <di:waypoint x="825" y="604" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_07_di" bpmnElement="Seq_IRS_07">
+        <di:waypoint x="757" y="604" />
+        <di:waypoint x="905" y="604" />
+        <di:waypoint x="905" y="604" />
+        <di:waypoint x="1052" y="604" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_08_di" bpmnElement="Seq_IRS_08">
+        <di:waypoint x="977" y="604" />
+        <di:waypoint x="1015" y="604" />
+        <di:waypoint x="1015" y="604" />
+        <di:waypoint x="1052" y="604" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_09_di" bpmnElement="Seq_IRS_09">
+        <di:waypoint x="1104" y="604" />
+        <di:waypoint x="1147" y="604" />
+        <di:waypoint x="1147" y="256" />
+        <di:waypoint x="1190" y="256" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_10_di" bpmnElement="Seq_IRS_10">
+        <di:waypoint x="1242" y="256" />
+        <di:waypoint x="1281" y="256" />
+        <di:waypoint x="1281" y="250" />
+        <di:waypoint x="1320" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_11_di" bpmnElement="Seq_IRS_11">
+        <di:waypoint x="1472" y="250" />
+        <di:waypoint x="1496" y="250" />
+        <di:waypoint x="1496" y="256" />
+        <di:waypoint x="1520" y="256" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_12_di" bpmnElement="Seq_IRS_12">
+        <di:waypoint x="1572" y="256" />
+        <di:waypoint x="1631" y="256" />
+        <di:waypoint x="1631" y="250" />
+        <di:waypoint x="1690" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_13_di" bpmnElement="Seq_IRS_13">
+        <di:waypoint x="1572" y="256" />
+        <di:waypoint x="1631" y="256" />
+        <di:waypoint x="1631" y="429" />
+        <di:waypoint x="1690" y="429" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_14_di" bpmnElement="Seq_IRS_14">
+        <di:waypoint x="1842" y="250" />
+        <di:waypoint x="1881" y="250" />
+        <di:waypoint x="1881" y="250" />
+        <di:waypoint x="1920" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_15_di" bpmnElement="Seq_IRS_15">
+        <di:waypoint x="1842" y="429" />
+        <di:waypoint x="1876" y="429" />
+        <di:waypoint x="1876" y="428" />
+        <di:waypoint x="1910" y="428" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_16_di" bpmnElement="Seq_IRS_16">
+        <di:waypoint x="1962" y="428" />
+        <di:waypoint x="2049" y="428" />
+        <di:waypoint x="2049" y="427" />
+        <di:waypoint x="2135" y="427" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_17_di" bpmnElement="Seq_IRS_17">
+        <di:waypoint x="1962" y="428" />
+        <di:waypoint x="2031" y="428" />
+        <di:waypoint x="2031" y="600" />
+        <di:waypoint x="2100" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_18_di" bpmnElement="Seq_IRS_18">
+        <di:waypoint x="2252" y="600" />
+        <di:waypoint x="2286" y="600" />
+        <di:waypoint x="2286" y="600" />
+        <di:waypoint x="2320" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_19_di" bpmnElement="Seq_IRS_19">
+        <di:waypoint x="2472" y="600" />
+        <di:waypoint x="2502" y="600" />
+        <di:waypoint x="2502" y="690" />
+        <di:waypoint x="310" y="690" />
+        <di:waypoint x="310" y="256" />
+        <di:waypoint x="340" y="256" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Seq_IRS_20_di" bpmnElement="Seq_IRS_20">
+        <di:waypoint x="2426" y="635" />
+        <di:waypoint x="2501" y="635" />
+        <di:waypoint x="2501" y="638" />
+        <di:waypoint x="2575" y="638" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Message_Bank_Submission_di" bpmnElement="Message_Bank_Submission">
+        <di:waypoint x="1766" y="215" />
+        <di:waypoint x="1766" y="890" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Message_Correction_Request_di" bpmnElement="Message_Correction_Request">
+        <di:waypoint x="2176" y="565" />
+        <di:waypoint x="2176" y="155" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Message_Correction_Response_di" bpmnElement="Message_Correction_Response">
+        <di:waypoint x="2396" y="155" />
+        <di:waypoint x="2396" y="565" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

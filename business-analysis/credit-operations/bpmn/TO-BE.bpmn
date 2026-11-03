@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Defs_TOBE" targetNamespace="https://portfolio.example/credit-operations" exporter="Business Analysis Portfolio" exporterVersion="1.0">
+  <bpmn:collaboration id="Collaboration_TOBE" name="Colaboração - TO-BE (piloto proposto)">
+    <bpmn:participant id="Customer_TOBE" name="Cliente (externo)" />
+    <bpmn:participant id="Pool_TOBE" name="Intermediário de crédito" processRef="Process_TOBE" />
+    <bpmn:participant id="Bank_TOBE" name="Instituição financeira (externa)" />
+    <bpmn:messageFlow id="T_MF_Lead" name="Nova lead" sourceRef="Customer_TOBE" targetRef="T_Start" />
+    <bpmn:messageFlow id="T_MF_Contact" name="Contacto" sourceRef="T_Contact" targetRef="Customer_TOBE" />
+    <bpmn:messageFlow id="T_MF_Remind" name="Documentos em falta" sourceRef="T_Reminder" targetRef="Customer_TOBE" />
+    <bpmn:messageFlow id="T_MF_Docs" name="Documentos" sourceRef="Customer_TOBE" targetRef="T_ReviewDocs" />
+    <bpmn:messageFlow id="T_MF_Submit" name="Dossiê" sourceRef="T_Submit" targetRef="Bank_TOBE" />
+    <bpmn:messageFlow id="T_MF_Decision" name="Decisão" sourceRef="Bank_TOBE" targetRef="T_Receive" />
+    <bpmn:messageFlow id="T_MF_Status" name="Estado" sourceRef="T_Close" targetRef="Customer_TOBE" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_TOBE" name="TO-BE (piloto proposto): tratamento de leads e documentação" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_TOBE">
+      <bpmn:lane id="Lane_TOBE_Marketing" name="Captação multicanal">
+        <bpmn:flowNodeRef>T_Start</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_TOBE_CRM" name="CRM / automação supervisionada">
+        <bpmn:flowNodeRef>T_Capture</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Detect</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_DuplicateGate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Assign</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Privacy</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Checklist</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Reminder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Dashboard</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_End</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_TOBE_Credito" name="Intermediário de crédito">
+        <bpmn:flowNodeRef>T_ReviewDuplicate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_DuplicateDecision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_DuplicateEnd</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Contact</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Timer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Triage</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_ReviewDocs</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_DocGate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Validate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_ValidGate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Submit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Receive</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Close</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_TOBE_Gestao" name="Gestão / controlo">
+        <bpmn:flowNodeRef>T_SLAAlert</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_SLAEnd</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="T_Start" name="Lead recebida">
+      <bpmn:outgoing>Flow_TOBE_01</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="T_Start_MessageDefinition" />
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="T_Capture" name="Registar lead e origem no CRM">
+      <bpmn:incoming>Flow_TOBE_01</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="T_Detect" name="Sinalizar duplicados potenciais">
+      <bpmn:incoming>Flow_TOBE_02</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_03</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="T_DuplicateGate" name="Possível duplicado?" default="Flow_TOBE_05">
+      <bpmn:incoming>Flow_TOBE_03</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_04</bpmn:outgoing>
+      <bpmn:outgoing>Flow_TOBE_05</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="T_ReviewDuplicate" name="Rever potencial duplicado">
+      <bpmn:incoming>Flow_TOBE_04</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_06</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="T_DuplicateDecision" name="Registo já existe?" default="Flow_TOBE_08">
+      <bpmn:incoming>Flow_TOBE_06</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_07</bpmn:outgoing>
+      <bpmn:outgoing>Flow_TOBE_08</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="T_DuplicateEnd" name="Duplicado reconciliado">
+      <bpmn:incoming>Flow_TOBE_07</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="T_Assign" name="Atribuir responsável e SLA">
+      <bpmn:incoming>Flow_TOBE_05</bpmn:incoming>
+      <bpmn:incoming>Flow_TOBE_08</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_09</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="T_Privacy" name="Verificar avisos e base aplicável">
+      <bpmn:incoming>Flow_TOBE_09</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_Contact" name="Contactar e ouvir cliente">
+      <bpmn:incoming>Flow_TOBE_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="T_Timer" name="Alerta 24h ilustrativo" attachedToRef="T_Contact" cancelActivity="false">
+      <bpmn:outgoing>Flow_TOBE_12</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="T_Timer_TimerDefinition"><bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT24H</bpmn:timeDuration></bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="T_SLAAlert" name="Escalar SLA com gestor">
+      <bpmn:incoming>Flow_TOBE_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_13</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="T_SLAEnd" name="Escalada registada">
+      <bpmn:incoming>Flow_TOBE_13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="T_Triage" name="Triagem com revisão humana">
+      <bpmn:incoming>Flow_TOBE_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="T_Checklist" name="Preparar checklist contextual">
+      <bpmn:incoming>Flow_TOBE_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_15</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="T_ReviewDocs" name="Conferir estado documental">
+      <bpmn:incoming>Flow_TOBE_15</bpmn:incoming>
+      <bpmn:incoming>Flow_TOBE_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_16</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="T_DocGate" name="Documentos completos?" default="Flow_TOBE_17">
+      <bpmn:incoming>Flow_TOBE_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_17</bpmn:outgoing>
+      <bpmn:outgoing>Flow_TOBE_19</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="T_Reminder" name="Notificar documentos pendentes">
+      <bpmn:incoming>Flow_TOBE_17</bpmn:incoming>
+      <bpmn:incoming>Flow_TOBE_21</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_18</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="T_Validate" name="Validar documentos por humano">
+      <bpmn:incoming>Flow_TOBE_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_20</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="T_ValidGate" name="Documentos válidos?" default="Flow_TOBE_21">
+      <bpmn:incoming>Flow_TOBE_20</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_21</bpmn:outgoing>
+      <bpmn:outgoing>Flow_TOBE_22</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="T_Submit" name="Submeter ao banco">
+      <bpmn:incoming>Flow_TOBE_22</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_23</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:receiveTask id="T_Receive" name="Receber decisão bancária">
+      <bpmn:incoming>Flow_TOBE_23</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_24</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:userTask id="T_Close" name="Atualizar estado e comunicar">
+      <bpmn:incoming>Flow_TOBE_24</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_25</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="T_Dashboard" name="Atualizar métricas auditáveis">
+      <bpmn:incoming>Flow_TOBE_25</bpmn:incoming>
+      <bpmn:outgoing>Flow_TOBE_26</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="T_End" name="Estado comunicado">
+      <bpmn:incoming>Flow_TOBE_26</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_TOBE_01" sourceRef="T_Start" targetRef="T_Capture" />
+    <bpmn:sequenceFlow id="Flow_TOBE_02" sourceRef="T_Capture" targetRef="T_Detect" />
+    <bpmn:sequenceFlow id="Flow_TOBE_03" sourceRef="T_Detect" targetRef="T_DuplicateGate" />
+    <bpmn:sequenceFlow id="Flow_TOBE_04" name="Sim" sourceRef="T_DuplicateGate" targetRef="T_ReviewDuplicate" />
+    <bpmn:sequenceFlow id="Flow_TOBE_05" name="Não" sourceRef="T_DuplicateGate" targetRef="T_Assign" />
+    <bpmn:sequenceFlow id="Flow_TOBE_06" sourceRef="T_ReviewDuplicate" targetRef="T_DuplicateDecision" />
+    <bpmn:sequenceFlow id="Flow_TOBE_07" name="Sim" sourceRef="T_DuplicateDecision" targetRef="T_DuplicateEnd" />
+    <bpmn:sequenceFlow id="Flow_TOBE_08" name="Não" sourceRef="T_DuplicateDecision" targetRef="T_Assign" />
+    <bpmn:sequenceFlow id="Flow_TOBE_09" sourceRef="T_Assign" targetRef="T_Privacy" />
+    <bpmn:sequenceFlow id="Flow_TOBE_10" sourceRef="T_Privacy" targetRef="T_Contact" />
+    <bpmn:sequenceFlow id="Flow_TOBE_11" sourceRef="T_Contact" targetRef="T_Triage" />
+    <bpmn:sequenceFlow id="Flow_TOBE_12" name="Prazo excedido" sourceRef="T_Timer" targetRef="T_SLAAlert" />
+    <bpmn:sequenceFlow id="Flow_TOBE_13" sourceRef="T_SLAAlert" targetRef="T_SLAEnd" />
+    <bpmn:sequenceFlow id="Flow_TOBE_14" sourceRef="T_Triage" targetRef="T_Checklist" />
+    <bpmn:sequenceFlow id="Flow_TOBE_15" sourceRef="T_Checklist" targetRef="T_ReviewDocs" />
+    <bpmn:sequenceFlow id="Flow_TOBE_16" sourceRef="T_ReviewDocs" targetRef="T_DocGate" />
+    <bpmn:sequenceFlow id="Flow_TOBE_17" name="Não" sourceRef="T_DocGate" targetRef="T_Reminder" />
+    <bpmn:sequenceFlow id="Flow_TOBE_18" name="Novo envio" sourceRef="T_Reminder" targetRef="T_ReviewDocs" />
+    <bpmn:sequenceFlow id="Flow_TOBE_19" name="Sim" sourceRef="T_DocGate" targetRef="T_Validate" />
+    <bpmn:sequenceFlow id="Flow_TOBE_20" sourceRef="T_Validate" targetRef="T_ValidGate" />
+    <bpmn:sequenceFlow id="Flow_TOBE_21" name="Não" sourceRef="T_ValidGate" targetRef="T_Reminder" />
+    <bpmn:sequenceFlow id="Flow_TOBE_22" name="Sim" sourceRef="T_ValidGate" targetRef="T_Submit" />
+    <bpmn:sequenceFlow id="Flow_TOBE_23" sourceRef="T_Submit" targetRef="T_Receive" />
+    <bpmn:sequenceFlow id="Flow_TOBE_24" sourceRef="T_Receive" targetRef="T_Close" />
+    <bpmn:sequenceFlow id="Flow_TOBE_25" sourceRef="T_Close" targetRef="T_Dashboard" />
+    <bpmn:sequenceFlow id="Flow_TOBE_26" sourceRef="T_Dashboard" targetRef="T_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_TOBE">
+    <bpmndi:BPMNPlane id="Plane_TOBE" bpmnElement="Collaboration_TOBE">
+      <bpmndi:BPMNShape id="Customer_TOBE_di" bpmnElement="Customer_TOBE" isHorizontal="true">
+        <dc:Bounds x="140" y="65" width="3466" height="76" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Pool_TOBE_di" bpmnElement="Pool_TOBE" isHorizontal="true">
+        <dc:Bounds x="140" y="180" width="3466" height="700" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_TOBE_Marketing_di" bpmnElement="Lane_TOBE_Marketing" isHorizontal="true">
+        <dc:Bounds x="140" y="180" width="3466" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_TOBE_CRM_di" bpmnElement="Lane_TOBE_CRM" isHorizontal="true">
+        <dc:Bounds x="140" y="330" width="3466" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_TOBE_Credito_di" bpmnElement="Lane_TOBE_Credito" isHorizontal="true">
+        <dc:Bounds x="140" y="530" width="3466" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_TOBE_Gestao_di" bpmnElement="Lane_TOBE_Gestao" isHorizontal="true">
+        <dc:Bounds x="140" y="730" width="3466" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Bank_TOBE_di" bpmnElement="Bank_TOBE" isHorizontal="true">
+        <dc:Bounds x="140" y="925" width="3466" height="76" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Start_di" bpmnElement="T_Start">
+        <dc:Bounds x="210" y="235" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Capture_di" bpmnElement="T_Capture">
+        <dc:Bounds x="340" y="385" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Detect_di" bpmnElement="T_Detect">
+        <dc:Bounds x="515" y="385" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_DuplicateGate_di" bpmnElement="T_DuplicateGate" isMarkerVisible="true">
+        <dc:Bounds x="695" y="395" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_ReviewDuplicate_di" bpmnElement="T_ReviewDuplicate">
+        <dc:Bounds x="850" y="575" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_DuplicateDecision_di" bpmnElement="T_DuplicateDecision" isMarkerVisible="true">
+        <dc:Bounds x="1030" y="585" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_DuplicateEnd_di" bpmnElement="T_DuplicateEnd">
+        <dc:Bounds x="1190" y="595" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Assign_di" bpmnElement="T_Assign">
+        <dc:Bounds x="1190" y="385" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Privacy_di" bpmnElement="T_Privacy">
+        <dc:Bounds x="1360" y="385" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Contact_di" bpmnElement="T_Contact">
+        <dc:Bounds x="1530" y="575" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Timer_di" bpmnElement="T_Timer">
+        <dc:Bounds x="1610" y="636" width="34" height="34" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_SLAAlert_di" bpmnElement="T_SLAAlert">
+        <dc:Bounds x="1760" y="766" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_SLAEnd_di" bpmnElement="T_SLAEnd">
+        <dc:Bounds x="1940" y="780" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Triage_di" bpmnElement="T_Triage">
+        <dc:Bounds x="1720" y="575" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Checklist_di" bpmnElement="T_Checklist">
+        <dc:Bounds x="1900" y="385" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_ReviewDocs_di" bpmnElement="T_ReviewDocs">
+        <dc:Bounds x="2080" y="575" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_DocGate_di" bpmnElement="T_DocGate" isMarkerVisible="true">
+        <dc:Bounds x="2260" y="585" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Reminder_di" bpmnElement="T_Reminder">
+        <dc:Bounds x="2410" y="385" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Validate_di" bpmnElement="T_Validate">
+        <dc:Bounds x="2410" y="575" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_ValidGate_di" bpmnElement="T_ValidGate" isMarkerVisible="true">
+        <dc:Bounds x="2590" y="585" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Submit_di" bpmnElement="T_Submit">
+        <dc:Bounds x="2760" y="575" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Receive_di" bpmnElement="T_Receive">
+        <dc:Bounds x="2930" y="575" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Close_di" bpmnElement="T_Close">
+        <dc:Bounds x="3100" y="575" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Dashboard_di" bpmnElement="T_Dashboard">
+        <dc:Bounds x="3270" y="385" width="145" height="74" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_End_di" bpmnElement="T_End">
+        <dc:Bounds x="3470" y="400" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_TOBE_01_di" bpmnElement="Flow_TOBE_01">
+        <di:waypoint x="246" y="253" />
+        <di:waypoint x="293" y="253" />
+        <di:waypoint x="293" y="422" />
+        <di:waypoint x="340" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_02_di" bpmnElement="Flow_TOBE_02">
+        <di:waypoint x="485" y="422" />
+        <di:waypoint x="500" y="422" />
+        <di:waypoint x="500" y="422" />
+        <di:waypoint x="515" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_03_di" bpmnElement="Flow_TOBE_03">
+        <di:waypoint x="660" y="422" />
+        <di:waypoint x="678" y="422" />
+        <di:waypoint x="678" y="421" />
+        <di:waypoint x="695" y="421" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_04_di" bpmnElement="Flow_TOBE_04">
+        <di:waypoint x="747" y="421" />
+        <di:waypoint x="799" y="421" />
+        <di:waypoint x="799" y="612" />
+        <di:waypoint x="850" y="612" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_05_di" bpmnElement="Flow_TOBE_05">
+        <di:waypoint x="747" y="421" />
+        <di:waypoint x="969" y="421" />
+        <di:waypoint x="969" y="422" />
+        <di:waypoint x="1190" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_06_di" bpmnElement="Flow_TOBE_06">
+        <di:waypoint x="995" y="612" />
+        <di:waypoint x="1013" y="612" />
+        <di:waypoint x="1013" y="611" />
+        <di:waypoint x="1030" y="611" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_07_di" bpmnElement="Flow_TOBE_07">
+        <di:waypoint x="1082" y="611" />
+        <di:waypoint x="1136" y="611" />
+        <di:waypoint x="1136" y="613" />
+        <di:waypoint x="1190" y="613" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_08_di" bpmnElement="Flow_TOBE_08">
+        <di:waypoint x="1082" y="611" />
+        <di:waypoint x="1136" y="611" />
+        <di:waypoint x="1136" y="422" />
+        <di:waypoint x="1190" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_09_di" bpmnElement="Flow_TOBE_09">
+        <di:waypoint x="1335" y="422" />
+        <di:waypoint x="1348" y="422" />
+        <di:waypoint x="1348" y="422" />
+        <di:waypoint x="1360" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_10_di" bpmnElement="Flow_TOBE_10">
+        <di:waypoint x="1505" y="422" />
+        <di:waypoint x="1518" y="422" />
+        <di:waypoint x="1518" y="612" />
+        <di:waypoint x="1530" y="612" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_11_di" bpmnElement="Flow_TOBE_11">
+        <di:waypoint x="1675" y="612" />
+        <di:waypoint x="1698" y="612" />
+        <di:waypoint x="1698" y="612" />
+        <di:waypoint x="1720" y="612" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_12_di" bpmnElement="Flow_TOBE_12">
+        <di:waypoint x="1644" y="653" />
+        <di:waypoint x="1702" y="653" />
+        <di:waypoint x="1702" y="803" />
+        <di:waypoint x="1760" y="803" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_13_di" bpmnElement="Flow_TOBE_13">
+        <di:waypoint x="1905" y="803" />
+        <di:waypoint x="1923" y="803" />
+        <di:waypoint x="1923" y="798" />
+        <di:waypoint x="1940" y="798" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_14_di" bpmnElement="Flow_TOBE_14">
+        <di:waypoint x="1865" y="612" />
+        <di:waypoint x="1883" y="612" />
+        <di:waypoint x="1883" y="422" />
+        <di:waypoint x="1900" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_15_di" bpmnElement="Flow_TOBE_15">
+        <di:waypoint x="2045" y="422" />
+        <di:waypoint x="2063" y="422" />
+        <di:waypoint x="2063" y="612" />
+        <di:waypoint x="2080" y="612" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_16_di" bpmnElement="Flow_TOBE_16">
+        <di:waypoint x="2225" y="612" />
+        <di:waypoint x="2243" y="612" />
+        <di:waypoint x="2243" y="611" />
+        <di:waypoint x="2260" y="611" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_17_di" bpmnElement="Flow_TOBE_17">
+        <di:waypoint x="2312" y="611" />
+        <di:waypoint x="2361" y="611" />
+        <di:waypoint x="2361" y="422" />
+        <di:waypoint x="2410" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_18_di" bpmnElement="Flow_TOBE_18">
+        <di:waypoint x="2555" y="422" />
+        <di:waypoint x="2595" y="422" />
+        <di:waypoint x="2595" y="345" />
+        <di:waypoint x="2040" y="345" />
+        <di:waypoint x="2040" y="612" />
+        <di:waypoint x="2080" y="612" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_19_di" bpmnElement="Flow_TOBE_19">
+        <di:waypoint x="2312" y="611" />
+        <di:waypoint x="2361" y="611" />
+        <di:waypoint x="2361" y="612" />
+        <di:waypoint x="2410" y="612" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_20_di" bpmnElement="Flow_TOBE_20">
+        <di:waypoint x="2555" y="612" />
+        <di:waypoint x="2573" y="612" />
+        <di:waypoint x="2573" y="611" />
+        <di:waypoint x="2590" y="611" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_21_di" bpmnElement="Flow_TOBE_21">
+        <di:waypoint x="2642" y="611" />
+        <di:waypoint x="2672" y="611" />
+        <di:waypoint x="2672" y="327" />
+        <di:waypoint x="2385" y="327" />
+        <di:waypoint x="2385" y="422" />
+        <di:waypoint x="2410" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_22_di" bpmnElement="Flow_TOBE_22">
+        <di:waypoint x="2642" y="611" />
+        <di:waypoint x="2701" y="611" />
+        <di:waypoint x="2701" y="612" />
+        <di:waypoint x="2760" y="612" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_23_di" bpmnElement="Flow_TOBE_23">
+        <di:waypoint x="2905" y="612" />
+        <di:waypoint x="2918" y="612" />
+        <di:waypoint x="2918" y="612" />
+        <di:waypoint x="2930" y="612" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_24_di" bpmnElement="Flow_TOBE_24">
+        <di:waypoint x="3075" y="612" />
+        <di:waypoint x="3088" y="612" />
+        <di:waypoint x="3088" y="612" />
+        <di:waypoint x="3100" y="612" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_25_di" bpmnElement="Flow_TOBE_25">
+        <di:waypoint x="3245" y="612" />
+        <di:waypoint x="3258" y="612" />
+        <di:waypoint x="3258" y="422" />
+        <di:waypoint x="3270" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TOBE_26_di" bpmnElement="Flow_TOBE_26">
+        <di:waypoint x="3415" y="422" />
+        <di:waypoint x="3443" y="422" />
+        <di:waypoint x="3443" y="418" />
+        <di:waypoint x="3470" y="418" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T_MF_Lead_di" bpmnElement="T_MF_Lead">
+        <di:waypoint x="228" y="141" />
+        <di:waypoint x="228" y="235" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T_MF_Contact_di" bpmnElement="T_MF_Contact">
+        <di:waypoint x="1603" y="575" />
+        <di:waypoint x="1603" y="141" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T_MF_Remind_di" bpmnElement="T_MF_Remind">
+        <di:waypoint x="2483" y="385" />
+        <di:waypoint x="2483" y="141" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T_MF_Docs_di" bpmnElement="T_MF_Docs">
+        <di:waypoint x="2153" y="141" />
+        <di:waypoint x="2153" y="575" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T_MF_Submit_di" bpmnElement="T_MF_Submit">
+        <di:waypoint x="2833" y="649" />
+        <di:waypoint x="2833" y="925" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T_MF_Decision_di" bpmnElement="T_MF_Decision">
+        <di:waypoint x="3003" y="925" />
+        <di:waypoint x="3003" y="649" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T_MF_Status_di" bpmnElement="T_MF_Status">
+        <di:waypoint x="3173" y="575" />
+        <di:waypoint x="3173" y="141" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
