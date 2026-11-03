@@ -1,5 +1,7 @@
 # Acquisition Analytics & Dashboard Architecture
 
+**Status:** Reproducible synthetic acquisition dataset, SQL and data-quality tests. BigQuery execution and a live Looker Studio dashboard are not provided. [Explore the full project catalogue](https://github.com/ninjaDX27/diogopinto/blob/main/docs/PROJECT_CATALOG.md).
+
 A reproducible six-month acquisition dataset, documented KPI definitions, BigQuery aggregation and a Looker Studio implementation specification. **Every campaign result in this repository is synthetic.**
 
 ## Run
