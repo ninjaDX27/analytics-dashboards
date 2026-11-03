@@ -324,8 +324,8 @@
       <bpmndi:BPMNEdge id="Seq_IRS_19_di" bpmnElement="Seq_IRS_19">
         <di:waypoint x="2472" y="600" />
         <di:waypoint x="2502" y="600" />
-        <di:waypoint x="2502" y="772" />
-        <di:waypoint x="310" y="772" />
+        <di:waypoint x="2502" y="690" />
+        <di:waypoint x="310" y="690" />
         <di:waypoint x="310" y="256" />
         <di:waypoint x="340" y="256" />
       </bpmndi:BPMNEdge>
